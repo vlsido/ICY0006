@@ -1,0 +1,652 @@
+---
+title: "Beer Consumption in Sao Paulo"
+output:
+  html_notebook: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+-----------------------------------------------------------
+
+DESCRIPTION OF THE PROJECT
+
+-----------------------------------------------------------
+
+What is the topic?
+
+Consumption of a beer in Sao Paulo, Brazil.
+
+
+Where did you get it from?
+
+
+https://www.kaggle.com/dongeorge/beer-consumption-sao-paulo
+
+
+What kind of variables you have (numerical/categorical etc)? Describe the variables
+(the meaning of those).
+
+
+/*
+ The original dataset was slightly changed (Spanish names were translated to English, two new columns, namely "Day_Of_The_Week" and "Month", were added)
+*/
+
+
+Numerical variables: 
+
+Date 
+Average_Temperature_Celsius, 
+Minimum Temperature_Celsius, 
+Maximum Temperature_Celsius, 
+Precipitation_mm,
+Beer_Consumption_ml
+
+Categorical variables: Day_of_The_Week 
+
+Categorical variables (in numeric format): End_of_The_Week, Month
+
+
+This dataset contains 365 rows of data (941 rows originally, however, rows with missing values were omitted).
+
+-----------------------------------------------------------
+
+Description of the variables
+
+-----------------------------------------------------------
+
+The "Date" variable has all 365 days of the year 2015
+
+"Average_Temperature_Celsius" - Mean temperature for every day of the year 2015 in Sao Paulo
+"Minimum Temperature_Celsius" - self explanatory 
+"Maximum Temperature_Celsius" - self explanatory
+
+"Precipitation_mm" - the amount of precipitation in mm for every day of the year 2015 in Sao Paulo
+
+"Day_of_The_Week" - name of the day of the week (by some reason in Russian, I assume it has something to do with the RStudio settings)
+
+"Month" - months in numeric format (1 - January, 2 - February, etc.)
+
+-----------------------------------------------------------
+
+Loading dataset
+
+-----------------------------------------------------------
+
+```{r}
+library(readr)
+
+Consumo_cerveja <- read_csv("C:/Users/PC/Desktop/Consumo_cerveja.csv", 
+    col_types = cols(Data = col_date(format = "%Y-%m-%d")), 
+    locale = locale(grouping_mark = "."))
+    
+View(Consumo_cerveja)
+```
+
+-----------------------------------------------------------
+
+Omitting NA values (all odd rows >365), renaming dataset, translating variables to English
+
+-----------------------------------------------------------
+
+```{r}
+Beer_consumption <- na.omit(Consumo_cerveja)
+
+rm(Consumo_cerveja)
+
+names(Beer_consumption)[names(Beer_consumption) == "Data"] <- "Date"
+
+names(Beer_consumption)[names(Beer_consumption) == "Temperatura Media (C)"] <- "Average_Temperature_Celsius"
+
+names(Beer_consumption)[names(Beer_consumption) == "Temperatura Minima (C)"] <- "Minimum_Temperature_Celsius"
+
+names(Beer_consumption)[names(Beer_consumption) == "Temperatura Maxima (C)"] <- "Maximum_Temperature_Celsius"
+
+names(Beer_consumption)[names(Beer_consumption) == "Precipitacao (mm)"] <- "Precipitation_mm"
+
+names(Beer_consumption)[names(Beer_consumption) == "Final de Semana"] <- "End_of_The_Week"
+
+names(Beer_consumption)[names(Beer_consumption) == "Consumo de cerveja (litros)"] <- "Beer_Consumption_ml"
+```
+
+------------------------------------------------------------
+
+Distribution graphs
+
+------------------------------------------------------------
+
+```{r}
+# libraries
+
+library(ggplot2)
+library(dplyr)
+```
+
+
+
+12 months to a variable
+
+```{r}
+twelve_months <-  scale_x_date(breaks = as.Date(c("2015-01-01","2015-02-01","2015-03-01","2015-04-01","2015-05-01","2015-06-01","2015-07-01","2015-08-01","2015-09-01","2015-10-01","2015-11-01","2015-12-01")), label = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"))
+```
+
+
+Beer consumption distribution graph:
+
+```{r}
+ggplot(Beer_consumption, aes(x=Beer_Consumption_ml)) +
+  geom_histogram(fill="#86212c", colour="#86212c", alpha=0.8, bins = 40) +
+  scale_x_continuous(limits = c(12000, 40000), breaks = seq(12000,40000,2500)) +
+  labs(x = "Beer consumption in ml")
+```
+
+All 365 days of beer consumption line plot:
+
+```{r}
+ggplot(Beer_consumption, aes(Date, Beer_Consumption_ml)) + geom_line(colour = '#86212c') + geom_vline(xintercept = as.numeric(as.Date(c("2015-03-01", "2015-06-01", "2015-09-01", "2015-12-01"))), linetype = "longdash", size = 0.3, col = "gray50") + theme(panel.background = element_rect(fill = "white", colour = "grey50"), axis.line = element_line(colour = "grey50", size = 1, linetype = "solid")) + twelve_months + labs(x = "", y = "Beer Consumption in ml")
+```
+
+
+Average temperature distribution graph:
+
+```{r}
+ggplot(Beer_consumption, aes(x=Average_Temperature_Celsius)) +
+  geom_histogram(fill="red", colour="#86212c", alpha=0.8, bins = 40) +
+  labs(x = "Average temperature in Celsius")
+```
+
+Minimum temperature distribution graph:
+
+```{r}
+ggplot(Beer_consumption, aes(x=Minimum_Temperature_Celsius)) +
+  geom_histogram(fill="blue", colour="#86212c", alpha=0.8, bins = 40) +
+  labs(x = "Minimum temperature in Celsius")
+```
+
+Maximum temperature distribution graph:
+
+```{r}
+ggplot(Beer_consumption, aes(x=Maximum_Temperature_Celsius)) +
+  geom_histogram(fill="green", colour="#86212c", alpha=0.8, bins = 40) +
+  labs(x = "Maximum temperature in Celsius")
+```
+
+
+Air temperature 1 year
+
+
+```{r}
+ggplot(Beer_consumption, aes(Date)) + 
+  geom_line(aes(y = Average_Temperature_Celsius, colour = "Average Temp")) +
+  geom_line(aes(y = Minimum_Temperature_Celsius, colour = "Minimum Temp")) +
+  geom_line(aes(y = Maximum_Temperature_Celsius, colour = "Maximum Temp")) +
+  labs(x = "", y = "Temperature in Celsius") + 
+  geom_vline(xintercept = as.numeric(as.Date(c("2015-03-01", "2015-06-01", "2015-09-01", "2015-12-01"))), linetype = "longdash", size = 0.3, col = "gray50") + 
+  theme(panel.background = element_rect(fill = "white", colour = "grey50"), axis.line = element_line(colour = "grey50", size = 1, linetype = "solid"), legend.title = element_blank()) +
+  twelve_months + scale_y_continuous(breaks = seq(10,40,2), limits = c(10,40))
+```
+
+From this graph we can see that we have higher air temperatures in mid-September - February than in the rest of the months (Maximum temperature in 19th of October (36.5℃), and minimum temperature on 27th of June (10.6℃))
+
+
+Precipitation distribution:
+
+
+
+
+
+
+----------------------------------------------------------
+
+Quantitative overview of the data
+
+----------------------------------------------------------
+
+Declaring a function to find the mode
+
+```{r}
+Mode <- function(x, na.rm = FALSE) {
+  if(na.rm){
+    x = x[!is.na(x)]
+  }
+
+  ux <- unique(x)
+  return(ux[which.max(tabulate(match(x, ux)))])
+}
+```
+
+
+-----------------------------------------------------------
+
+CENTRAL TENDENCY OF ALL VARIABLES
+
+-----------------------------------------------------------
+
+Beer consumption in ml (mean, mean trimmed 25%, median, mode) code:
+
+```{r}
+beer_consumption_ml_mean <- mean(Beer_consumption[["Beer_Consumption_ml"]])
+
+beer_consumption_ml_mean_trimmed_25 <- mean(Beer_consumption[["Beer_Consumption_ml"]], trim = 0.25)
+
+beer_consumption_ml_median <- median(Beer_consumption[["Beer_Consumption_ml"]])
+
+beer_consumption_ml_mode <- Mode(Beer_consumption[["Beer_Consumption_ml"]])
+```
+
+
+
+Precipitation in mm (mean, mean trimmed 25%, median, mode) code:
+
+```{r}
+precipitation_mm_mean <- mean(Beer_consumption[["Precipitation_mm"]])
+
+precipitation_mm_mean_trimmed_25 <- mean(Beer_consumption[["Precipitation_mm"]], trim = 0.25)
+
+precipitation_mm_median <- median(Beer_consumption[["Precipitation_mm"]])
+
+precipitation_mm_mode <- Mode(Beer_consumption[["Precipitation_mm"]])
+```
+
+
+Average temperature in Celsius (mean, mean trimmed 25%, median, mode) code:
+
+```{r}
+average_temperature_celsius_mean <- mean(Beer_consumption[["Average_Temperature_Celsius"]])
+
+average_temperature_celsius_mean_trimmed_25 <- mean(Beer_consumption[["Average_Temperature_Celsius"]], trim = 0.25)
+
+average_temperature_celsius_median <- median(Beer_consumption[["Average_Temperature_Celsius"]])
+
+average_temperature_celsius_mode <- Mode(Beer_consumption[["Average_Temperature_Celsius"]])
+```
+
+
+Maximum temperature in Celsius (mean, mean trimmed 25%, median, mode) code:
+
+```{r}
+max_temperature_celsius_mean <- mean(Beer_consumption[["Maximum_Temperature_Celsius"]])
+
+max_temperature_celsius_mean_trimmed_25 <- mean(Beer_consumption[["Maximum_Temperature_Celsius"]], trim = 0.25)
+
+max_temperature_celsius_median <- median(Beer_consumption[["Maximum_Temperature_Celsius"]])
+
+max_temperature_celsius_mode <- Mode(Beer_consumption[["Maximum_Temperature_Celsius"]])
+```
+
+
+Minimum temperature in Celsius (mean, mean trimmed 25%, median, mode) code:
+
+```{r}
+min_temperature_celsius_mean <- mean(Beer_consumption[["Minimum_Temperature_Celsius"]])
+
+min_temperature_celsius_mean_trimmed_25 <- mean(Beer_consumption[["Minimum_Temperature_Celsius"]], trim = 0.25)
+
+min_temperature_celsius_median <- median(Beer_consumption[["Minimum_Temperature_Celsius"]])
+
+min_temperature_celsius_mode <- Mode(Beer_consumption[["Minimum_Temperature_Celsius"]])
+```
+
+-----------------------------------------------------------------
+
+VARIABILITY MEASURES OF ALL VARIABLES
+
+-----------------------------------------------------------------
+
+
+Beer consumption in ml (range, interquartile range, variance, standard deviation) code:
+
+
+```{r}
+beer_consumption_ml_range <- max(Beer_consumption[["Beer_Consumption_ml"]]) - min(Beer_consumption[["Beer_Consumption_ml"]])
+
+beer_consumption_ml_interquartile_range <- IQR(Beer_consumption[["Beer_Consumption_ml"]])
+
+beer_consumption_ml_variance <- var(Beer_consumption[["Beer_Consumption_ml"]])
+
+beer_consumption_ml_standard_deviation <- sd(Beer_consumption[["Beer_Consumption_ml"]])
+```
+
+
+Precipitation in mm (range, interquartile range, variance, standard deviation) code:
+
+```{r}
+precipitation_mm_range <- max(Beer_consumption[["Precipitation_mm"]]) - min(Beer_consumption[["Precipitation_mm"]])
+
+precipitation_mm_interquartile_range <- IQR(Beer_consumption[["Precipitation_mm"]])
+
+precipitation_mm_variance <- var(Beer_consumption[["Precipitation_mm"]])
+
+precipitation_mm_standard_deviation <- sd(Beer_consumption[["Precipitation_mm"]])
+```
+
+
+Average temperature in Celsius (range, interquartile range, variance, standard deviation) code:
+
+```{r}
+average_temperature_celsius_range <- max(Beer_consumption[["Average_Temperature_Celsius"]]) - min(Beer_consumption[["Average_Temperature_Celsius"]])
+
+average_temperature_celsius_interquartile_range <- IQR(Beer_consumption[["Average_Temperature_Celsius"]])
+
+average_temperature_celsius_variance <- var(Beer_consumption[["Average_Temperature_Celsius"]])
+
+average_temperature_celsius_standard_deviation <- sd(Beer_consumption[["Average_Temperature_Celsius"]])
+```
+
+
+Minimum temperature in Celsius (range, interquartile range, variance, standard deviation) code:
+
+```{r}
+min_temperature_celsius_range <- max(Beer_consumption[["Minimum_Temperature_Celsius"]]) - min(Beer_consumption[["Minimum_Temperature_Celsius"]])
+
+min_temperature_celsius_interquartile_range <- IQR(Beer_consumption[["Minimum_Temperature_Celsius"]])
+
+min_temperature_celsius_variance <- var(Beer_consumption[["Minimum_Temperature_Celsius"]])
+
+min_temperature_celsius_standard_deviation <- sd(Beer_consumption[["Minimum_Temperature_Celsius"]])
+```
+
+
+Minimum temperature in Celsius (range, interquartile range, variance, standard deviation) code:
+
+```{r}
+max_temperature_celsius_range <- max(Beer_consumption[["Maximum_Temperature_Celsius"]]) - min(Beer_consumption[["Maximum_Temperature_Celsius"]])
+
+max_temperature_celsius_interquartile_range <- IQR(Beer_consumption[["Maximum_Temperature_Celsius"]]) 
+
+max_temperature_celsius_variance <- var(Beer_consumption[["Maximum_Temperature_Celsius"]]) 
+
+max_temperature_celsius_standard_deviation <- sd(Beer_consumption[["Maximum_Temperature_Celsius"]]) 
+```
+
+
+
+
+
+
+
+
+Adding new variables (name of the weekday, month (numeric)):
+
+```{r}
+
+Beer_consumption$Day_Of_The_Week <- weekdays(as.Date(Beer_consumption$Date))
+
+library(lubridate)
+
+Beer_consumption$Month <- month(Beer_consumption$Date)
+```
+
+
+Beer consumption by one week:
+
+```{r}
+Beer_consumption %>% 
+  group_by(Day_Of_The_Week) %>%
+    ggplot(., aes(Day_Of_The_Week, Beer_Consumption_ml))+
+    geom_boxplot(outlier.size = 1.7, outlier.shape = 20, lwd = 0.8, fatten = 1.5, fill = rainbow(n=7, start = 0.65, end = 0.35))+
+    coord_flip() +
+    geom_hline(yintercept = beer_consumption_ml_mean, linetype = "longdash", size = 0.4) + 
+    scale_x_discrete(limit = c("понедельник","вторник","среда","четверг","пятница","суббота","воскресенье")) +         
+  theme_classic() +
+  annotate("text", label = "mean = 25401 ml", x = 2.5, y = 35000) +
+  labs(x = "Day of The Week", y = "Beer Consumption in ml")
+```
+
+From this plot we can see that beer consumption on Saturday and Sunday is noticeably higher, while on Monday and Wednesday it is the lowest.
+
+
+-----------------------------------------------------------------
+Preparing dataset for correlation matrix
+-----------------------------------------------------------------
+
+```{r}
+tmp_data <- Beer_consumption %>% select(Average_Temperature_Celsius, Minimum_Temperature_Celsius, Maximum_Temperature_Celsius, Precipitation_mm, End_of_The_Week, Beer_Consumption_ml, Month)
+
+
+### renaming to make it more readable in matrix
+
+
+names(tmp_data)[names(tmp_data) == "Average_Temperature_Celsius"] <- "Avg_Temp_C"
+
+names(tmp_data)[names(tmp_data) == "Minimum_Temperature_Celsius"] <- "Min_Temp_C"
+
+names(tmp_data)[names(tmp_data) == "Maximum_Temperature_Celsius"] <- "Max_Temp_C"
+
+names(tmp_data)[names(tmp_data) == "End_of_The_Week"] <- "Weekend"
+
+names(tmp_data)[names(tmp_data) == "Beer_Consumption_ml"] <- "Beer_Consumption"
+
+data <- cor(tmp_data)
+
+```
+
+
+Correlation matrix:
+
+```{r}
+corrplot(data, method="color", addCoef.col="black", tl.cex=0.75, tl.col="black", number.cex = 0.75, cl.ratio = 0.3, is.corr = FALSE, col = colorRampPalette(c("#000000", "#04051A", "#821E5A", "#CA1A50", "#F05C42", "#F6AA82", "#FAEBDD"))(200), cl.length = 7, cl.lim = c(-0.2, 1))
+```
+
+Observations:
+Beer consumption depends on air temperature (especially, on the max temperature), it is also important, whether it's a weekend or not, there also a little correlation with the amount of precipitation.
+
+
+
+--------------------------------------------------------------------------------
+DEPENDENT VARIABLE vs INDEPENDENT VARIABLES
+--------------------------------------------------------------------------------
+
+Dependent variable: "Beer_Consumption_ml"
+
+Independent variables: all the others
+
+
+```{r}
+ggplot(Beer_consumption, aes(x=End_of_The_Week, y=Beer_Consumption_ml)) + 
+  geom_point() +
+  labs(x="Weekend (0 - no, 1 - yes)", y="Beer consumption in ml")
+```
+
+This plot shows that the minimum of consumed beer on weekends is higher than the minimum on working days, the maximum is also higher than maximum on working days
+
+
+```{r}
+ggplot(Beer_consumption, aes(x=Average_Temperature_Celsius, y=Beer_Consumption_ml)) + 
+  geom_point()
+
+```
+
+In this and next scatter plots we see that people tend to drink more as weather gets warmer.
+
+
+```{r}
+ggplot(Beer_consumption, aes(x=Maximum_Temperature_Celsius, y=Beer_Consumption_ml)) + geom_point()
+
+```
+
+
+
+
+```{r}
+ggplot(Beer_consumption, aes(x=Minimum_Temperature_Celsius, y=Beer_Consumption_ml)) + geom_point()
+
+```
+
+
+
+
+```{r}
+ggplot(Beer_consumption, aes(x=Precipitation_mm, y=Beer_Consumption_ml)) + geom_point()
+
+```
+
+A little correlation between the amount of precipitation and amount of beer consumed. Mostly there were no precipitation, however on very rainy days people tend to drink less beer.
+
+
+
+```{r}
+ggplot(Beer_consumption, aes(Date, Beer_Consumption_ml)) + geom_point() + twelve_months
+```
+
+
+
+--------------------------------------------------------------------------------
+LINEAR REGRESSION PLOT
+--------------------------------------------------------------------------------
+
+Let's take a look at the correlation between months and beer consumption
+
+```{r}
+ggplot(Beer_consumption, aes(Date, Beer_Consumption_ml)) + geom_point(alpha = 0.5) +           twelve_months +
+  stat_smooth(aes(Date, Beer_Consumption_ml), method="loess", color = "blue", size=1.5, formula = y ~ x) + 
+  geom_vline(xintercept = as.numeric(as.Date(c("2015-03-01", "2015-06-01", "2015-09-01", "2015-12-01"))), linetype = "longdash", size = 0.3, col = "gray50")
+```
+
+The consumption of beer is noticeably higher in Mid-September - February, as we have seen previously, in these months in Sao Paulo are the warmest of all
+
+
+-------------------------------------------------------------------
+Linear regression between beer consumption and maximum temperature
+-------------------------------------------------------------------
+
+As we have seen in our correlation matrix, beer consumption has the higher correlation with the maximum temperature, let's take a look at the plot:
+
+```{r}
+ggplot(Beer_consumption, aes(x=Maximum_Temperature_Celsius, y=Beer_Consumption_ml)) + 
+  geom_point(alpha=0.5) +
+  stat_smooth(aes(Maximum_Temperature_Celsius, Beer_Consumption_ml), method="loess", color = "blue", size=1.5, formula = y ~ x) +
+  labs (x = "Maximum Temperature in Celsius", y = "Beer consumption in ml")
+```
+  
+It is clear that people in Sao Paulo are drinking beer to refresh, and they drink more on the warm days
+
+
+-----------------------------------------------------
+
+ONE MORE, NOW WITH THE PRECIPITATION
+
+------------------------------------------------------
+
+```{r}
+ggplot(Beer_consumption, aes(x=Precipitation_mm, y=Beer_Consumption_ml)) + 
+  geom_point(alpha=0.5) +
+  stat_smooth(aes(Precipitation_mm, Beer_Consumption_ml), method="loess", color = "blue", size=1.5, formula = y ~ x) +
+  scale_x_continuous(trans = "log10") +
+  labs(x = "Precipitation in mm", y = "Beer consumption in ml")
+```
+
+There is small correlation between the amount of precipitation and beer drinking. Consumption level falls when there is rainfall. However if there is a little rain, the difference is not significant. 
+
+
+
+------------------------------------------------------------------------
+
+Making a training and testing models. Proportion - 70/30
+
+------------------------------------------------------------------------
+
+```{r}
+smp_size <- floor(0.7 * nrow(Beer_consumption))
+
+set.seed(123)
+train_ind <- sample(seq_len(nrow(Beer_consumption)), size = smp_size)
+
+training_set <- Beer_consumption[train_ind, ]
+testing_set <- Beer_consumption[-train_ind, ]
+```
+  
+
+------------------------------------------------------------------------
+
+Developing a model on training dataset, use it to predict the beer consumption on test data
+
+------------------------------------------------------------------------
+
+
+```{r}
+model <- lm(Beer_Consumption_ml ~ ., training_set)
+
+p <- predict(model, testing_set)
+
+actuals_preds <- data.frame(cbind(actuals=testing_set$Beer_Consumption_ml, predicteds=p))
+
+correlation_accuracy <- cor(actuals_preds)
+
+```
+
+
+```{r}
+show(correlation_accuracy)
+```
+
+~ 84.9%
+
+
+```{r}
+head(actuals_preds) 
+```
+
+
+
+
+
+
+-------------------------------------------------------------------------
+
+MAPE, RMSE, MAE, MinMaxAccuracy metrics
+
+-------------------------------------------------------------------------
+
+
+MAPE (lower the better):
+
+```{r}
+mape <- mean(abs((actuals_preds$predicteds - actuals_preds$actuals)) / actuals_preds$actuals)
+
+show(mape)
+```
+~ 7.9%
+
+
+RMSE (lower the better):
+
+```{r}
+rmse <- sqrt(mean((actuals_preds$predicteds - actuals_preds$actuals)^2))
+
+show(rmse)
+```
+MAE (lower the better):
+
+```{r}
+mae <- mean(abs(actuals_preds$predicteds - actuals_preds$actuals))
+
+show(mae)
+```
+
+MinMaxAccuracy (higher the better):
+
+```{r}
+min_max_accuracy <- mean(apply(actuals_preds, 1, min) / apply(actuals_preds, 1, max))
+
+show(min_max_accuracy)
+```
+~ 92.6%
+
+
+The prediction worked good, RMSE and other metrics have decent result (keep in mind we predict beer consumption measured in ml).
+
+
+
+--------------------------------------------------------------------------
+
+Conclusion
+
+--------------------------------------------------------------------------
+
+1. People in studied area drink more on warm days
+
+2. Heavy rainfall make people to drink less, however little rain makes from little to no difference in beer consumption
+
+3. People drink more on weekends
+
