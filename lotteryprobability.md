@@ -48,6 +48,8 @@ Match 0 numbers + the "SuperStar" number.
 
 n! / k!*(n-k)!
 
+where n is total amount of numbers (90 if none selected yet), k is how many we want to select
+
 ### Match all 6 numbers
 
 To calculate the probabality of matching all 6 numbers we need to calculate the amount of possible combinations:
